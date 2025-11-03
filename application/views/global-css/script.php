@@ -101,6 +101,33 @@
       });
   });
 
+  $(document).on("click", ".btn-view-user", function(e) {
+      e.preventDefault();
+      var id = $(this).data("init");
+
+      // show loading spinner first
+      $("#userDetailModal .modal-body").html($("#modal-loading").show());
+      $("#userDetailModal").modal("show");
+
+      $.ajax({
+          url: base_url + "app/user_detail",   // <-- your backend PHP endpoint
+          type: "POST",
+          data: { id: id },
+          dataType: "json",
+          success: function(data) {
+            console.log(data);
+              if (data.success) {
+                  $("#userDetailModal .modal-body").html(data.content);
+              } else {
+                  $("#userDetailModal .modal-body").html("<p class='text-danger'>Error loading data.</p>");
+              }
+          },
+          error: function() {
+              $("#userDetailModal .modal-body").html("<p class='text-danger'>Request failed.</p>");
+          }
+      });
+  });
+
   
   $(".btn-delete-reservation").click(function (e) {
     e.preventDefault();

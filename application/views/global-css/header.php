@@ -74,3 +74,21 @@
     </div>
   </div>
 </div>
+
+<div class="modal fade" id="userDetailModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="icon-docs"></i>&nbsp;&nbsp;Maklumat Pengguna</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- AJAX content will be loaded here -->
+        <div class="text-center p-4" id="modal-loading" style="display:none;">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-2">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

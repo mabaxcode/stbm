@@ -22,7 +22,7 @@
         
         <div class="view-profile">
         <a 
-        href="#" 
+        href="<?php echo base_url('app/edit_profile/'.$user['id']); ?>" 
         class="btn btn-secondary">
         <i class="fa fa-edit"></i>
         Kemaskini Profile

@@ -81,6 +81,31 @@
             </ul>
           </div>
         </li>
+
+
+
+        <?php if($this->session->userdata('user_role') == "admin"): ?>
+        <li class="nav-item">
+          <a data-bs-toggle="collapse" href="#base">
+            <i class="fas fa-table"></i>
+              <p>Pengguna</p>
+            <span class="caret"></span>
+          </a>
+          <div class="collapse show" id="base">
+            <ul class="nav nav-collapse">
+              
+              <li class="<?php echo ($this->uri->segment(2) == 'senarai_pengguna') ? 'active' : '' ?>">
+                <a href="<?php echo base_url('app/senarai_pengguna');?>">
+                  <span class="sub-item">Senarai Pengguna</span>
+                </a>
+              </li>
+              
+
+              
+            </ul>
+          </div>
+        </li>
+        <?php endif; ?>
       </ul>
     </div>
   </div>

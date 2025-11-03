@@ -18,6 +18,24 @@ class App extends CI_Controller {
 	public function index()
 	{	
 		$data['content'] = 'app/dashboard';
+
+		# total user
+		$data['total_user'] = $this->MeetingRoom_model->count_total_users();
+		# total approved booking
+		$data['total_approved_booking'] = $this->MeetingRoom_model->count_total_approved_bookings();
+		# total reject booking
+		$data['total_reject_booking'] = $this->MeetingRoom_model->count_total_reject_bookings();
+		# total pending booking
+		$data['total_pending_booking'] = $this->MeetingRoom_model->count_total_pending_bookings();
+
+		// echo $data['total_approved_booking'];exit;
+
+		# by user id
+		$data['user_booking_count'] = $this->MeetingRoom_model->count_total_bookings_by_user($this->session->userdata('user_id'));
+		$data['user_in_process_count'] = $this->MeetingRoom_model->count_total_in_process_by_user($this->session->userdata('user_id'));
+		$data['user_approved_count'] = $this->MeetingRoom_model->count_total_approved_by_user($this->session->userdata('user_id'));
+		$data['user_rejected_count'] = $this->MeetingRoom_model->count_total_rejected_by_user($this->session->userdata('user_id'));
+
 		$this->load->view('app/pages', $data);
 	}
 
@@ -194,6 +212,133 @@ class App extends CI_Controller {
 
 		// echo "<pre>"; print_r($data['reservations']); echo "</pre>"; exit;
 		$this->load->view('app/pages', $data);
+	}
+
+	public function senarai_pengguna()
+	{
+		// $data['content']      = 'app/senarai-pengguna';
+		// $data['users'] = $this->MeetingRoom_model->get_all_users();
+
+		// $this->load->view('app/pages', $data);
+
+		$data['content']      = 'app/senarai-pengguna';
+		$data['users'] = $this->MeetingRoom_model->get_all_users();
+		$data['breadcrumb'] = "Senarai Pengguna";
+		$data['btn_name'] = "Lihat Butiran";
+		$data['proses'] = false;
+		$data['back_url'] = "senarai_pengguna";
+
+		// echo "<pre>"; print_r($data['reservations']); echo "</pre>"; exit;
+		$this->load->view('app/pages', $data);
+	}
+
+	public function user_detail() {
+        $post = $this->input->post();
+        $user = $this->MeetingRoom_model->get_user_detail($post);
+		// print_r($user);
+        if ($user) {
+            $html = $this->load->view('app/component/user-detail-modal', ['user' => $user], true);
+            echo json_encode([
+                "success" => true,
+                "content" => $html
+            ]);
+        } else {
+            echo json_encode([
+                "success" => false
+            ]);
+        }
+    }
+
+	function edit_profile($id)
+	{
+		$data['content']    = 'app/edit-profile';
+		$data['user'] = $this->MeetingRoom_model->get_user_booking($id);
+		$data['user_info'] = $this->MeetingRoom_model->get_user_info($id);
+
+		$this->load->view('app/pages', $data);
+	}
+
+	function tukar_katalaluan()
+	{
+		$data['content']    = 'app/tukar-katalaluan';
+
+		$this->load->view('app/pages', $data);
+	}
+
+	public function edit_profile_process($data=false)
+	{	
+		$post = $this->input->post();
+
+
+		$this->load->library('form_validation');
+
+        // Validation rules
+        $this->form_validation->set_rules('name', 'Full Name', 'required|min_length[3]');
+        $this->form_validation->set_rules('email', 'Email Address', 'required|valid_email');
+        $this->form_validation->set_rules('phone_no', 'No Telefon', 'required');
+		$this->form_validation->set_rules('department_name', 'Jabatan', 'required');
+		$this->form_validation->set_rules('designation', 'Jawatan', 'required');
+
+        if ($this->form_validation->run() == FALSE) {
+            // Validation failed, reload the form with error messages
+			$data['content']    = 'app/edit-profile';
+			$data['user'] 		= $this->MeetingRoom_model->get_user_booking($post['user_id']);
+			$data['user_info']  = $this->MeetingRoom_model->get_user_info($post['user_id']);
+			$this->load->view('app/pages', $data);
+
+        } else {
+            // Validation passed, continue processing (e.g., save to DB)
+			$this->MeetingRoom_model->update_profile($post);
+			$this->session->set_flashdata('success', 'Profile berjaya dikemaskini!');
+			redirect ('app/profile');
+        }
+
+	}
+
+	function do_change_password()
+	{
+		$post = $this->input->post();
+
+		$this->load->library('form_validation');
+
+		// Validation rules
+		$this->form_validation->set_rules('current_password', 'Current Password', 'required');
+		$this->form_validation->set_rules('new_password', 'New Password', 'required|min_length[6]');
+		$this->form_validation->set_rules('confirm_password', 'Confirm Password', 'required|matches[new_password]');
+
+		if ($this->form_validation->run() == FALSE) {
+			// Validation failed, reload the form with error messages
+			$data['content']    = 'app/tukar-katalaluan';
+			$this->load->view('app/pages', $data);
+
+		} else {
+			// Validation passed, continue processing (e.g., save to DB)
+			$user_id = $this->session->userdata('user_id');
+			$current_password = $post['current_password'];
+			$new_password = $post['new_password'];
+
+			// check current password is correct or not
+			$check = $this->MeetingRoom_model->verify_current_password($user_id, $current_password);
+
+			if (!$check) {
+				$this->session->set_flashdata('error', 'Katalaluan sekarang tidak betul.');
+				$data['content']    = 'app/tukar-katalaluan';
+				$this->load->view('app/pages', $data);
+			}else{
+				$change = $this->MeetingRoom_model->change_password($user_id, $new_password);
+
+				if ($change == true) {
+					$this->session->set_flashdata('success', 'Katalaluan berjaya ditukar!');
+					redirect ('app/profile');
+				} else {
+					$this->session->set_flashdata('error', 'Gagal menukar katalaluan');
+					$data['content']    = 'app/tukar-katalaluan';
+					$this->load->view('app/pages', $data);
+				}
+			}
+
+		}
+
 	}
 
 }

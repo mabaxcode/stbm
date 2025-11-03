@@ -124,5 +124,113 @@ class MeetingRoom_model extends CI_Model {
         return $this->db->get()->row_array();
     }
 
+    function get_all_users() {
+        $this->db->select('*, users.id as row_id');
+        $this->db->from('users');
+        // where role user
+        $this->db->where('users.role', 'user');
+        // join user info table with user_id    
+        $this->db->join('user_info', 'users.id = user_info.user_id', 'left');
+        return $this->db->get()->result_array();
+    }
+
+    public function get_user_detail($post) {
+        $this->db->select('*, users.id as row_id');
+        $this->db->from('users');
+        $this->db->where('users.id', $post['id']);  
+        $this->db->join('user_info', 'users.id = user_info.user_id', 'left');
+        // echo $this->db->last_query();
+        return $this->db->get()->row_array();
+    }
+
+    public function update_profile($post) {
+
+
+        $user_id = $post['user_id'];
+
+        # user
+        $user_data = [
+            'name'  => $post['name'],
+            'email' => $post['email'],
+        ];
+
+        # user_info
+        $user_info_data = [
+            'phone_no'        => $post['phone_no'],
+            'department_name' => $post['department_name'],
+            'designation'     => $post['designation'],
+        ];
+
+        // Update users table
+        $this->db->where('id', $user_id);
+        $this->db->update('users', $user_data);
+
+        // Update user_info table
+        $this->db->where('user_id', $user_id);
+        $this->db->update('user_info', $user_info_data);
+
+        return ($this->db->affected_rows() > 0);
+    }
+
+    function verify_current_password($user_id, $current_password) {
+        $this->db->where('id', $user_id);
+        $user = $this->db->get('users')->row_array();
+
+        if ($user && password_verify($current_password, $user['password'])) {
+            return true;
+        }
+        return false;
+    }
+
+    function change_password($user_id, $new_password) {
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', [
+            'password' => password_hash($new_password, PASSWORD_BCRYPT)
+        ]);
+    }
+
+    function count_total_users() {
+        $this->db->where('role', 'user');
+        return $this->db->count_all_results('users');
+    }
+
+    function count_total_approved_bookings() {
+        $this->db->where('status', 'Lulus');
+        return $this->db->count_all_results('reservations');
+    }
+
+    function count_total_pending_bookings() {
+        $this->db->where('status', 'Dalam Proses');
+        return $this->db->count_all_results('reservations');
+    }
+
+    function count_total_reject_bookings() {
+        $this->db->where('status', 'Batal');
+        return $this->db->count_all_results('reservations');
+    }
+
+    function count_total_bookings_by_user($user_id) {
+        $this->db->where('user_id', $user_id);
+        return $this->db->count_all_results('reservations');
+    }
+
+    function count_total_in_process_by_user($user_id) {
+        $this->db->where('user_id', $user_id);
+        $this->db->where('status', 'Dalam Proses');
+        return $this->db->count_all_results('reservations');
+    }
+
+    function count_total_approved_by_user($user_id) {
+        $this->db->where('user_id', $user_id);
+        $this->db->where('status', 'Lulus');
+        return $this->db->count_all_results('reservations');
+    }
+
+    function count_total_rejected_by_user($user_id) {
+        $this->db->where('user_id', $user_id);
+        $this->db->where('status', 'Batal');
+        return $this->db->count_all_results('reservations');
+    }
+
 }
 ?>
